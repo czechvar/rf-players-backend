@@ -1,6 +1,6 @@
 import type { CollectionConfig, AccessArgs } from 'payload'
 
-type UserRole = 'admin' | 'trainer' | 'player'
+type UserRole = 'admin' | 'trainer' | 'player' | 'parent'
 interface AuthUser {
   id: string
   role?: UserRole
@@ -17,6 +17,7 @@ export const Users: CollectionConfig = {
   admin: {
     useAsTitle: 'email',
     defaultColumns: ['firstName', 'lastName', 'email', 'role'],
+    group: 'User Management',
   },
   auth: {
     verify: false, // Phase 1: can enable later
@@ -51,7 +52,7 @@ export const Users: CollectionConfig = {
         { label: 'Admin', value: 'admin' },
         { label: 'Trainer', value: 'trainer' },
         { label: 'Player', value: 'player' },
-        // Parent will arrive in Phase 2
+        { label: 'Parent', value: 'parent' },
       ],
       defaultValue: 'trainer',
     },
@@ -96,7 +97,75 @@ export const Users: CollectionConfig = {
       type: 'text',
       admin: { position: 'sidebar' },
     },
+    {
+      name: 'parentId',
+      type: 'relationship',
+      relationTo: 'users',
+      filterOptions: {
+        role: { equals: 'parent' }
+      },
+      admin: { 
+        position: 'sidebar',
+        condition: (_, siblingData) => siblingData.role === 'player',
+        description: 'Link player to their parent account'
+      },
+    },
+    {
+      name: 'playerIds',
+      type: 'relationship',
+      relationTo: 'users',
+      hasMany: true,
+      filterOptions: {
+        role: { equals: 'player' }
+      },
+      admin: { 
+        position: 'sidebar',
+        condition: (_, siblingData) => siblingData.role === 'parent',
+        description: 'Children managed by this parent'
+      },
+    },
   ],
+  hooks: {
+    afterChange: [
+      async ({ req, doc, operation }) => {
+        // Auto-create attendance records for new players for all upcoming events
+        if (operation === 'create' && doc.role === 'player' && req.payload) {
+          try {
+            // Get all future events (events with date >= today)
+            const today = new Date()
+            const futureEvents = await req.payload.find({
+              collection: 'events',
+              where: {
+                date: { greater_than_equal: today.toISOString() }
+              },
+              limit: 1000,
+              user: req.user,
+            })
+
+            // Create attendance records for each future event
+            const attendancePromises = futureEvents.docs.map(async (event) => {
+              return req.payload.create({
+                collection: 'attendance',
+                data: {
+                  eventId: event.id,
+                  playerId: doc.id,
+                  status: 'pending',
+                  updatedBy: req.user?.id || doc.id,
+                  updatedAt: new Date().toISOString(),
+                },
+                user: req.user,
+              })
+            })
+
+            await Promise.all(attendancePromises)
+          } catch (error) {
+            // Log error but don't fail user creation
+            console.error('Error creating attendance records for new player:', error)
+          }
+        }
+      }
+    ]
+  },
   timestamps: true,
 }
 

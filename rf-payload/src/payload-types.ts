@@ -70,6 +70,7 @@ export interface Config {
     users: User;
     media: Media;
     events: Event;
+    attendance: Attendance;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
     'payload-migrations': PayloadMigration;
@@ -79,6 +80,7 @@ export interface Config {
     users: UsersSelect<false> | UsersSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
     events: EventsSelect<false> | EventsSelect<true>;
+    attendance: AttendanceSelect<false> | AttendanceSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
     'payload-migrations': PayloadMigrationsSelect<false> | PayloadMigrationsSelect<true>;
@@ -121,7 +123,7 @@ export interface UserAuthOperations {
  */
 export interface User {
   id: string;
-  role: 'admin' | 'trainer' | 'player';
+  role: 'admin' | 'trainer' | 'player' | 'parent';
   firstName: string;
   lastName: string;
   dateOfBirth?: string | null;
@@ -132,6 +134,14 @@ export interface User {
   active?: boolean | null;
   photo?: (string | null) | Media;
   phoneNumber?: string | null;
+  /**
+   * Link player to their parent account
+   */
+  parentId?: (string | null) | User;
+  /**
+   * Children managed by this parent
+   */
+  playerIds?: (string | User)[] | null;
   updatedAt: string;
   createdAt: string;
   email: string;
@@ -192,6 +202,32 @@ export interface Event {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "attendance".
+ */
+export interface Attendance {
+  id: string;
+  eventId: string | Event;
+  playerId: string | User;
+  /**
+   * Players/Parents can set: pending, attending, declined. Trainers/Admins can set all statuses.
+   */
+  status: 'pending' | 'attending' | 'declined' | 'attended' | 'excused';
+  /**
+   * Optional notes for trainers/admins
+   */
+  notes?: string | null;
+  /**
+   * User who last updated this record
+   */
+  updatedBy: string | User;
+  /**
+   * Timestamp of last update
+   */
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-locked-documents".
  */
 export interface PayloadLockedDocument {
@@ -208,6 +244,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'events';
         value: string | Event;
+      } | null)
+    | ({
+        relationTo: 'attendance';
+        value: string | Attendance;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -264,6 +304,8 @@ export interface UsersSelect<T extends boolean = true> {
   active?: T;
   photo?: T;
   phoneNumber?: T;
+  parentId?: T;
+  playerIds?: T;
   updatedAt?: T;
   createdAt?: T;
   email?: T;
@@ -310,6 +352,19 @@ export interface EventsSelect<T extends boolean = true> {
   type?: T;
   description?: T;
   locked?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "attendance_select".
+ */
+export interface AttendanceSelect<T extends boolean = true> {
+  eventId?: T;
+  playerId?: T;
+  status?: T;
+  notes?: T;
+  updatedBy?: T;
   updatedAt?: T;
   createdAt?: T;
 }
