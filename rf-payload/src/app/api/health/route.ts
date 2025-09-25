@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server'
 
 // Helper function to add CORS headers
 function addCorsHeaders(response: Response): Response {
-  response.headers.set('Access-Control-Allow-Origin', 'http://127.0.0.1:4000')
+  response.headers.set('Access-Control-Allow-Origin', '*')
   response.headers.set('Access-Control-Allow-Credentials', 'true')
   response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PATCH, PUT, DELETE, OPTIONS')
   response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization')
