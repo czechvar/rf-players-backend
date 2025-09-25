@@ -19,15 +19,15 @@ export default async function HomePage() {
     <div className="home">
       <div className="content">
         <picture>
-          <source srcSet="https://raw.githubusercontent.com/payloadcms/payload/main/packages/ui/src/assets/payload-favicon.svg" />
+          <source srcSet="/rf_logo.jpg" />
           <Image
-            alt="Payload Logo"
-            height={65}
-            src="https://raw.githubusercontent.com/payloadcms/payload/main/packages/ui/src/assets/payload-favicon.svg"
-            width={65}
+            alt="RF Logo"
+            height={512}
+            src="/rf_logo.jpg"
+            width={512}
           />
         </picture>
-        {!user && <h1>Welcome to your new project.</h1>}
+        {!user && <h1>Welcome to RF young players Admin</h1>}
         {user && <h1>Welcome back, {user.email}</h1>}
         <div className="links">
           <a
@@ -38,21 +38,22 @@ export default async function HomePage() {
           >
             Go to admin panel
           </a>
-          <a
+          {/* <a
             className="docs"
             href="https://payloadcms.com/docs"
             rel="noopener noreferrer"
             target="_blank"
           >
             Documentation
-          </a>
+          </a> */}
         </div>
       </div>
       <div className="footer">
-        <p>Update this page by editing</p>
+        @copyright Royal Flush
+        {/* <p>Update this page by editing</p>
         <a className="codeLink" href={fileURL}>
           <code>app/(frontend)/page.tsx</code>
-        </a>
+        </a> */}
       </div>
     </div>
   )

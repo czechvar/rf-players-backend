@@ -9,6 +9,7 @@ import sharp from 'sharp'
 
 import { Users } from './collections/Users'
 import { Media } from './collections/Media'
+import { Events } from './collections/Events'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -20,9 +21,14 @@ export default buildConfig({
       baseDir: path.resolve(dirname),
     },
   },
-  collections: [Users, Media],
+  collections: [Users, Media, Events],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',
+  /**
+   * CORS / CSRF - temporarily disabled CSRF for debugging
+   */
+  cors: ["http://localhost:3000", "http://localhost:4000", "http://127.0.0.1:3000", "http://127.0.0.1:4000"],
+  csrf: ["http://localhost:3000", "http://localhost:4000", "http://127.0.0.1:3000", "http://127.0.0.1:4000"],
   typescript: {
     outputFile: path.resolve(dirname, 'payload-types.ts'),
   },
