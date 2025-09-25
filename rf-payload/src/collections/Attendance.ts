@@ -75,6 +75,30 @@ export const Attendance: CollectionConfig = {
   hooks: {
     beforeChange: [
       async ({ req, data, operation }) => {
+        // Check if event is locked
+        if (data?.eventId && req.payload) {
+          try {
+            const event = await req.payload.findByID({
+              collection: 'events',
+              id: data.eventId,
+              user: req.user,
+            })
+            
+            if (event?.locked && req.user) {
+              const role = getRole(req.user)
+              // Only admin can modify attendance for locked events
+              if (role !== 'admin') {
+                throw new Error('Cannot modify attendance for a locked event. Contact an administrator.')
+              }
+            }
+          } catch (error) {
+            if (error instanceof Error && error.message.includes('locked')) {
+              throw error
+            }
+            // If event lookup fails, continue with normal validation
+          }
+        }
+        
         // Set updatedBy and updatedAt fields
         if (req.user) {
           data.updatedBy = req.user.id

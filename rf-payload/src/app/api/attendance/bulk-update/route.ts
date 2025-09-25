@@ -2,6 +2,19 @@ import { NextRequest } from 'next/server'
 import { getPayload } from 'payload'
 import configPromise from '@/payload.config'
 
+// Helper function to add CORS headers
+function addCorsHeaders(response: Response): Response {
+  response.headers.set('Access-Control-Allow-Origin', '*')
+  response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PATCH, PUT, DELETE, OPTIONS')
+  response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization')
+  return response
+}
+
+// Handle preflight requests
+export async function OPTIONS() {
+  return addCorsHeaders(new Response(null, { status: 200 }))
+}
+
 /**
  * POST /api/attendance/bulk-update
  * Bulk update attendance records (admin/trainer only)
@@ -15,17 +28,17 @@ export async function POST(request: NextRequest) {
     const { user } = await payload.auth({ headers: request.headers })
     
     if (!user) {
-      return Response.json({ error: 'Unauthorized' }, { status: 401 })
+      return addCorsHeaders(Response.json({ error: 'Unauthorized' }, { status: 401 }))
     }
 
     // Check if user has permission to bulk update
     const userRole = user.role
     if (!['admin', 'trainer'].includes(userRole)) {
-      return Response.json({ error: 'Forbidden - Admin or Trainer access required' }, { status: 403 })
+      return addCorsHeaders(Response.json({ error: 'Forbidden - Admin or Trainer access required' }, { status: 403 }))
     }
 
     if (!Array.isArray(updates) || updates.length === 0) {
-      return Response.json({ error: 'Invalid updates array' }, { status: 400 })
+      return addCorsHeaders(Response.json({ error: 'Invalid updates array' }, { status: 400 }))
     }
 
     // Process each update
@@ -62,7 +75,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    return Response.json({
+    return addCorsHeaders(Response.json({
       success: errors.length === 0,
       results,
       errors,
@@ -71,10 +84,10 @@ export async function POST(request: NextRequest) {
         successful: results.length,
         failed: errors.length
       }
-    })
+    }))
   } catch (error) {
     console.error('Error in bulk attendance update:', error)
-    return Response.json({ error: 'Internal server error' }, { status: 500 })
+    return addCorsHeaders(Response.json({ error: 'Internal server error' }, { status: 500 }))
   }
 }
 
@@ -91,22 +104,22 @@ export async function PATCH(request: NextRequest) {
     const { user } = await payload.auth({ headers: request.headers })
     
     if (!user) {
-      return Response.json({ error: 'Unauthorized' }, { status: 401 })
+      return addCorsHeaders(Response.json({ error: 'Unauthorized' }, { status: 401 }))
     }
 
     // Check if user has permission
     const userRole = user.role
     if (!['admin', 'trainer'].includes(userRole)) {
-      return Response.json({ error: 'Forbidden - Admin or Trainer access required' }, { status: 403 })
+      return addCorsHeaders(Response.json({ error: 'Forbidden - Admin or Trainer access required' }, { status: 403 }))
     }
 
     if (!eventId || !status) {
-      return Response.json({ error: 'Missing eventId or status' }, { status: 400 })
+      return addCorsHeaders(Response.json({ error: 'Missing eventId or status' }, { status: 400 }))
     }
 
     // Validate status for bulk operations
     if (!['attended', 'excused'].includes(status)) {
-      return Response.json({ error: 'Invalid status for bulk operation' }, { status: 400 })
+      return addCorsHeaders(Response.json({ error: 'Invalid status for bulk operation' }, { status: 400 }))
     }
 
     // Get all attendance records for the event
@@ -146,7 +159,7 @@ export async function PATCH(request: NextRequest) {
       }
     }
 
-    return Response.json({
+    return addCorsHeaders(Response.json({
       success: errors.length === 0,
       eventId,
       status,
@@ -156,9 +169,9 @@ export async function PATCH(request: NextRequest) {
         failed: errors.length
       },
       errors
-    })
+    }))
   } catch (error) {
     console.error('Error in bulk mark attendance:', error)
-    return Response.json({ error: 'Internal server error' }, { status: 500 })
+    return addCorsHeaders(Response.json({ error: 'Internal server error' }, { status: 500 }))
   }
 }

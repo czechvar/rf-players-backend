@@ -16,7 +16,8 @@
     "test": "pnpm run test:int && pnpm run test:e2e",
     "test:e2e": "cross-env NODE_OPTIONS=\"--no-deprecation --no-experimental-strip-types\" pnpm exec playwright test",
     "test:int": "cross-env NODE_OPTIONS=--no-deprecation vitest run --config ./vitest.config.mts",
-    "reset:password": "tsx scripts/reset-password.ts"
+    "reset:password": "tsx scripts/reset-password.ts",
+    "seed:attendance": "cross-env NODE_OPTIONS=--no-deprecation tsx scripts/seed-attendance.ts"
   },
   "dependencies": {
     "@payloadcms/db-mongodb": "3.56.0",

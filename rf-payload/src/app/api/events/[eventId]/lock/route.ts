@@ -17,10 +17,10 @@ export async function OPTIONS() {
 }
 
 /**
- * GET /api/events/[eventId]/attendance
- * Get all attendance records for a specific event
+ * POST /api/events/[eventId]/lock
+ * Lock an event to prevent further registrations and protect from deletion
  */
-export async function GET(
+export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ eventId: string }> }
 ) {
@@ -35,34 +35,47 @@ export async function GET(
       return addCorsHeaders(Response.json({ error: 'Unauthorized' }, { status: 401 }))
     }
 
-    // Get attendance records for the event
-    const attendance = await payload.find({
-      collection: 'attendance',
-      where: {
-        eventId: { equals: eventId }
+    // Only admin and trainer can lock events
+    if (!['admin', 'trainer'].includes(user.role)) {
+      return addCorsHeaders(Response.json({ error: 'Insufficient permissions' }, { status: 403 }))
+    }
+
+    // Update the event to set locked = true
+    const updatedEvent = await payload.update({
+      collection: 'events',
+      id: eventId,
+      data: {
+        locked: true,
       },
-      depth: 2, // Include user and event details
       user,
     })
 
-    return addCorsHeaders(Response.json(attendance))
+    return addCorsHeaders(Response.json({
+      success: true,
+      message: 'Event locked successfully',
+      event: updatedEvent,
+    }))
   } catch (error) {
-    console.error('Error fetching attendance:', error)
+    console.error('Error locking event:', error)
+    
+    if (error instanceof Error) {
+      return addCorsHeaders(Response.json({ error: error.message }, { status: 400 }))
+    }
+    
     return addCorsHeaders(Response.json({ error: 'Internal server error' }, { status: 500 }))
   }
 }
 
 /**
- * PATCH /api/events/[eventId]/attendance
- * Update attendance status for the current user or their child
+ * DELETE /api/events/[eventId]/lock
+ * Unlock an event to allow registrations and edits again
  */
-export async function PATCH(
+export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ eventId: string }> }
 ) {
   try {
     const { eventId } = await params
-    const { playerId, status, notes } = await request.json()
     const payload = await getPayload({ config: configPromise })
 
     // Get the authenticated user from the request
@@ -72,40 +85,28 @@ export async function PATCH(
       return addCorsHeaders(Response.json({ error: 'Unauthorized' }, { status: 401 }))
     }
 
-    // Find the attendance record
-    const attendanceRecords = await payload.find({
-      collection: 'attendance',
-      where: {
-        and: [
-          { eventId: { equals: eventId } },
-          { playerId: { equals: playerId } }
-        ]
-      },
-      user,
-    })
-
-    if (attendanceRecords.docs.length === 0) {
-      return addCorsHeaders(Response.json({ error: 'Attendance record not found' }, { status: 404 }))
+    // Only admin and trainer can unlock events
+    if (!['admin', 'trainer'].includes(user.role)) {
+      return addCorsHeaders(Response.json({ error: 'Insufficient permissions' }, { status: 403 }))
     }
 
-    const attendanceId = attendanceRecords.docs[0].id
-
-    // Update the attendance record
-    const updatedAttendance = await payload.update({
-      collection: 'attendance',
-      id: attendanceId,
+    // Update the event to set locked = false
+    const updatedEvent = await payload.update({
+      collection: 'events',
+      id: eventId,
       data: {
-        status,
-        notes,
-        updatedBy: user.id,
-        updatedAt: new Date().toISOString(),
+        locked: false,
       },
       user,
     })
 
-    return addCorsHeaders(Response.json(updatedAttendance))
+    return addCorsHeaders(Response.json({
+      success: true,
+      message: 'Event unlocked successfully',
+      event: updatedEvent,
+    }))
   } catch (error) {
-    console.error('Error updating attendance:', error)
+    console.error('Error unlocking event:', error)
     
     if (error instanceof Error) {
       return addCorsHeaders(Response.json({ error: error.message }, { status: 400 }))

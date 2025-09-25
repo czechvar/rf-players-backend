@@ -24,10 +24,44 @@ export const Events: CollectionConfig = {
   access: {
     read: () => true, // Publicly listable in Phase 1 (can tighten later)
     create: isAdminOrTrainer,
-    update: isAdminOrTrainer,
-    delete: isAdmin,
+    update: isAdminOrTrainer, // Basic permission check - additional logic in hooks
+    delete: isAdmin, // Basic permission check - additional logic in hooks
   },
   hooks: {
+    beforeChange: [
+      async ({ req, originalDoc, data, operation }) => {
+        // Prevent updates to locked events (except by admin unlocking)
+        if (operation === 'update' && originalDoc?.locked && req.user) {
+          const role = getRole(req.user)
+          
+          // Only allow admin to unlock events
+          if (role !== 'admin' && data.locked !== false) {
+            throw new Error('Cannot modify locked events. Contact an administrator.')
+          }
+        }
+      }
+    ],
+    beforeDelete: [
+      async ({ req, id }) => {
+        // Get the event to check if it's locked
+        try {
+          const event = await req.payload.findByID({
+            collection: 'events',
+            id,
+            user: req.user,
+          })
+          
+          if (event?.locked) {
+            throw new Error('Cannot delete locked events. Unlock the event first.')
+          }
+        } catch (error) {
+          if (error instanceof Error && error.message.includes('locked')) {
+            throw error
+          }
+          // If we can't find the event, let the deletion proceed (it will fail anyway)
+        }
+      }
+    ],
     afterChange: [
       async ({ req, doc, operation }) => {
         // Auto-create attendance records for all players when a new event is created
