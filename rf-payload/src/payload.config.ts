@@ -53,11 +53,13 @@ export default buildConfig({
   plugins: [
     payloadCloudPlugin(),
     // storage-adapter-placeholder
+    ...(process.env.NODE_ENV === 'production' ? [
       vercelBlobStorage({
         collections: {
           media: true,
         },
         token: process.env.BLOB_READ_WRITE_TOKEN || '',
-      }),
+      })
+    ] : []),
   ],
 })
