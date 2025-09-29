@@ -44,15 +44,14 @@ export default buildConfig({
     url: process.env.DATABASE_URI || '',
   }),
   sharp,
-  // Configure local uploads for development
-  upload: process.env.NODE_ENV === 'production' ? undefined : {
+  upload: {
     limits: {
       fileSize: 50000000, // 50MB
     },
   },
   plugins: [
-    payloadCloudPlugin(),
-    // storage-adapter-placeholder
+    // Only include payloadCloudPlugin in production
+    ...(process.env.NODE_ENV === 'production' ? [payloadCloudPlugin()] : []),
     ...(process.env.NODE_ENV === 'production' ? [
       vercelBlobStorage({
         collections: {
