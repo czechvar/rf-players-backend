@@ -1,5 +1,3 @@
-// storage-adapter-import-placeholder
-import { vercelBlobStorage } from '@payloadcms/storage-vercel-blob'
 import { mongooseAdapter } from '@payloadcms/db-mongodb'
 import { payloadCloudPlugin } from '@payloadcms/payload-cloud'
 import { lexicalEditor } from '@payloadcms/richtext-lexical'
@@ -7,6 +5,8 @@ import path from 'path'
 import { buildConfig } from 'payload'
 import { fileURLToPath } from 'url'
 import sharp from 'sharp'
+
+import { vercelBlobStorage } from '@payloadcms/storage-vercel-blob'
 
 import { Users } from './collections/Users'
 import { Media } from './collections/Media'
@@ -25,6 +25,7 @@ export default buildConfig({
     importMap: {
       baseDir: path.resolve(dirname),
     },
+    theme: 'light',
   },
   collections: [Users, Media, Events, Attendance],
   editor: lexicalEditor(),
@@ -33,13 +34,14 @@ export default buildConfig({
    * CORS / CSRF - Allow frontend access
    */
   cors: [
-    ...(isDevelopment ? ["*"] : []),
+    ...(isDevelopment ? ["http://localhost:3000"] : []),
     ...(process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : [])
   ],
   csrf: [
-    ...(isDevelopment ? ["*"] : []),
+    ...(isDevelopment ? ["http://localhost:3000"] : []),
     ...(process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : [])
   ],
+  cookiePrefix: 'payload',
   typescript: {
     outputFile: path.resolve(dirname, 'payload-types.ts'),
   },

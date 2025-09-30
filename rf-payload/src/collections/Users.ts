@@ -20,8 +20,36 @@ export const Users: CollectionConfig = {
     group: 'User Management',
   },
   auth: {
-    verify: false, // Phase 1: can enable later
+    // Ensure these are properly configured
+    tokenExpiration: 7200, // 2 hours in seconds
+    verify: false, // Set to true if you want email verification
+    maxLoginAttempts: 5,
+    lockTime: 600 * 1000, // 10 minutes
   },
+
+  //   access: {
+  //   // Add proper access controls
+  //   create: ({ req: { user } }) => {
+  //     if (!user) return false
+  //     return ['admin', 'trainer'].includes(user.role)
+  //   },
+  //   read: ({ req: { user } }) => {
+  //     if (!user) return false
+  //     if (['admin', 'trainer'].includes(user.role)) return true
+  //     // Users can read their own data and their children's data
+  //     return { id: { equals: user.id } }
+  //   },
+  //   update: ({ req: { user } }) => {
+  //     if (!user) return false
+  //     if (['admin', 'trainer'].includes(user.role)) return true
+  //     // Users can update their own data
+  //     return { id: { equals: user.id } }
+  //   },
+  //   delete: ({ req: { user } }) => {
+  //     if (!user) return false
+  //     return ['admin'].includes(user.role)
+  //   },
+  // },
   access: {
     read: ({ req }) => {
       // Admin & trainer can read all; user can read self
