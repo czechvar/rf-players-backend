@@ -16,6 +16,9 @@ import { Attendance } from './collections/Attendance'
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
 
+const isProduction = process.env.NODE_ENV === 'production'
+const isDevelopment = process.env.NODE_ENV === 'development'
+
 export default buildConfig({
   admin: {
     user: Users.slug,
@@ -30,11 +33,11 @@ export default buildConfig({
    * CORS / CSRF - Allow frontend access
    */
   cors: [
-    "http://localhost:4000", 
+    ...(isDevelopment ? ["http://localhost:4000"] : []),
     ...(process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : [])
   ],
   csrf: [
-    "http://localhost:4000", 
+    ...(isDevelopment ? ["http://localhost:4000"] : []),
     ...(process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : [])
   ],
   typescript: {
@@ -50,14 +53,14 @@ export default buildConfig({
     },
   },
   plugins: [
-    // Only include payloadCloudPlugin in production
-    ...(process.env.NODE_ENV === 'production' ? [payloadCloudPlugin()] : []),
-    ...(process.env.NODE_ENV === 'production' ? [
+
+    ...(isProduction ? [payloadCloudPlugin()] : []),
+    ...(isProduction && process.env.BLOB_READ_WRITE_TOKEN ? [
       vercelBlobStorage({
         collections: {
           media: true,
         },
-        token: process.env.BLOB_READ_WRITE_TOKEN || '',
+        token: process.env.BLOB_READ_WRITE_TOKEN,
       })
     ] : []),
   ],
