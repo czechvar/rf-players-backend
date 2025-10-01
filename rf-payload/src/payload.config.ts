@@ -57,13 +57,14 @@ export default buildConfig({
   plugins: [
 
     ...(isProduction ? [payloadCloudPlugin()] : []),
-    ...(isProduction && process.env.BLOB_READ_WRITE_TOKEN ? [
-      vercelBlobStorage({
-        collections: {
-          media: true,
-        },
-        token: process.env.BLOB_READ_WRITE_TOKEN,
-      })
-    ] : []),
+    ...[
+        vercelBlobStorage({
+          enabled: !!process.env.BLOB_READ_WRITE_TOKEN,
+          collections: {
+            media: true,
+          },
+          token: process.env.BLOB_READ_WRITE_TOKEN,
+        })
+    ],
   ],
 })
