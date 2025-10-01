@@ -1,19 +1,11 @@
 import { NextRequest } from 'next/server'
+import { createCorsResponse, handleOptions } from '@/utils/cors'
 import { getPayload } from 'payload'
 import configPromise from '@/payload.config'
 
-// Helper function to add CORS headers
-function addCorsHeaders(response: Response): Response {
-  response.headers.set('Access-Control-Allow-Origin', '*')
-  response.headers.set('Access-Control-Allow-Credentials', 'true')
-  response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PATCH, PUT, DELETE, OPTIONS')
-  response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization')
-  return response
-}
 
-// Handle preflight requests
 export async function OPTIONS() {
-  return addCorsHeaders(new Response(null, { status: 200 }))
+  return handleOptions()
 }
 
 /**
@@ -28,7 +20,7 @@ export async function GET(request: NextRequest) {
     const { user } = await payload.auth({ headers: request.headers })
     
     if (!user) {
-      return addCorsHeaders(Response.json({ error: 'Unauthorized' }, { status: 401 }))
+      return createCorsResponse({ error: 'Unauthorized' }, 401)
     }
 
     // Get some basic counts
@@ -72,7 +64,7 @@ export async function GET(request: NextRequest) {
       user,
     })
 
-    return addCorsHeaders(Response.json({
+    return createCorsResponse({
       user: {
         id: user.id,
         email: user.email,
@@ -88,12 +80,12 @@ export async function GET(request: NextRequest) {
         players: allPlayers.docs,
         attendance: allAttendance.docs
       }
-    }))
+    })
   } catch (error) {
     console.error('Debug endpoint error:', error)
-    return addCorsHeaders(Response.json({ 
+    return createCorsResponse({ 
       error: 'Internal server error',
       details: error instanceof Error ? error.message : 'Unknown error'
-    }, { status: 500 }))
+    }, 500)
   }
 }

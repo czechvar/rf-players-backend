@@ -1,18 +1,11 @@
 import { NextRequest } from 'next/server'
 import { getPayload } from 'payload'
 import configPromise from '@/payload.config'
-
-// Helper function to add CORS headers
-function addCorsHeaders(response: Response): Response {
-  response.headers.set('Access-Control-Allow-Origin', '*')
-  response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PATCH, PUT, DELETE, OPTIONS')
-  response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization')
-  return response
-}
+import { createCorsResponse, handleOptions } from '@/utils/cors'
 
 // Handle preflight requests
 export async function OPTIONS() {
-  return addCorsHeaders(new Response(null, { status: 200 }))
+  return handleOptions()
 }
 
 /**
@@ -27,13 +20,13 @@ export async function GET(request: NextRequest) {
     const { user } = await payload.auth({ headers: request.headers })
     
     if (!user) {
-      return addCorsHeaders(Response.json({ error: 'Unauthorized' }, { status: 401 }))
+      return createCorsResponse({ error: 'Unauthorized' }, 401)
     }
 
     // Check if user has permission to view attendance summary
     const userRole = user.role
     if (!['admin', 'trainer'].includes(userRole)) {
-      return addCorsHeaders(Response.json({ error: 'Forbidden - Admin or Trainer access required' }, { status: 403 }))
+      return createCorsResponse({ error: 'Forbidden - Admin or Trainer access required' }, 403)
     }
 
     const url = new URL(request.url)
@@ -93,12 +86,12 @@ export async function GET(request: NextRequest) {
       })
     })
 
-    return addCorsHeaders(Response.json({
+    return createCorsResponse({
       summary: Object.values(eventSummary),
       totalRecords: attendance.totalDocs
-    }))
+    })
   } catch (error) {
     console.error('Error fetching attendance summary:', error)
-    return addCorsHeaders(Response.json({ error: 'Internal server error' }, { status: 500 }))
+    return createCorsResponse({ error: 'Internal server error' }, 500)
   }
 }

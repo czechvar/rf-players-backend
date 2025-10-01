@@ -1,21 +1,11 @@
 import { NextRequest } from 'next/server'
+import { createCorsResponse, handleOptions } from '@/utils/cors'
 import { getPayload } from 'payload'
 import configPromise from '@/payload.config'
 
-// Helper function to add CORS headers
-function addCorsHeaders(response: Response): Response {
-  response.headers.set('Access-Control-Allow-Origin', '*')
-  response.headers.set('Access-Control-Allow-Credentials', 'true')
-  response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PATCH, PUT, DELETE, OPTIONS')
-  response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization')
-  return response
-}
-
-// Handle preflight requests
 export async function OPTIONS() {
-  return addCorsHeaders(new Response(null, { status: 200 }))
+  return handleOptions()
 }
-
 /**
  * GET /api/events/[eventId]/attendance
  * Get all attendance records for a specific event
@@ -32,7 +22,7 @@ export async function GET(
     const { user } = await payload.auth({ headers: request.headers })
     
     if (!user) {
-      return addCorsHeaders(Response.json({ error: 'Unauthorized' }, { status: 401 }))
+      return createCorsResponse({ error: 'Unauthorized' }, 401)
     }
 
     // Get attendance records for the event
@@ -45,10 +35,10 @@ export async function GET(
       user,
     })
 
-    return addCorsHeaders(Response.json(attendance))
+    return createCorsResponse(attendance)
   } catch (error) {
     console.error('Error fetching attendance:', error)
-    return addCorsHeaders(Response.json({ error: 'Internal server error' }, { status: 500 }))
+    return createCorsResponse({ error: 'Internal server error' }, 500)
   }
 }
 
@@ -69,7 +59,7 @@ export async function PATCH(
     const { user } = await payload.auth({ headers: request.headers })
     
     if (!user) {
-      return addCorsHeaders(Response.json({ error: 'Unauthorized' }, { status: 401 }))
+      return createCorsResponse({ error: 'Unauthorized' }, 401)
     }
 
     // Find the attendance record
@@ -85,7 +75,7 @@ export async function PATCH(
     })
 
     if (attendanceRecords.docs.length === 0) {
-      return addCorsHeaders(Response.json({ error: 'Attendance record not found' }, { status: 404 }))
+      return createCorsResponse({ error: 'Attendance record not found' }, 404)
     }
 
     const attendanceId = attendanceRecords.docs[0].id
@@ -103,14 +93,14 @@ export async function PATCH(
       user,
     })
 
-    return addCorsHeaders(Response.json(updatedAttendance))
+    return createCorsResponse(updatedAttendance)
   } catch (error) {
     console.error('Error updating attendance:', error)
     
     if (error instanceof Error) {
-      return addCorsHeaders(Response.json({ error: error.message }, { status: 400 }))
+      return createCorsResponse({ error: error.message }, 400)
     }
     
-    return addCorsHeaders(Response.json({ error: 'Internal server error' }, { status: 500 }))
+    return createCorsResponse({ error: 'Internal server error' }, 500)
   }
 }
