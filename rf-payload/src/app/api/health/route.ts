@@ -2,8 +2,8 @@ import { NextRequest } from 'next/server'
 import { createCorsResponse, handleOptions } from '@/utils/cors'
 
 // Handle preflight requests
-export async function OPTIONS() {
-  return handleOptions()
+export async function OPTIONS(request: NextRequest) {
+  return handleOptions(request)
 }
 
 /**
@@ -17,13 +17,13 @@ export async function GET(request: NextRequest) {
       message: 'Backend is running',
       timestamp: new Date().toISOString(),
       port: process.env.PORT || '3000'
-    })
+    }, 200, request.headers)
   } catch (error) {
     console.error('Health check error:', error)
     return createCorsResponse({ 
       status: 'error',
       message: 'Health check failed',
       error: error instanceof Error ? error.message : 'Unknown error'
-    }, 500)
+    }, 500, request.headers)
   }
 }

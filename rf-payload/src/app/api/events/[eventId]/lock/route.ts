@@ -4,8 +4,8 @@ import configPromise from '@/payload.config'
 import { createCorsResponse, handleOptions } from '@/utils/cors'
 
 // Handle preflight requests
-export async function OPTIONS() {
-  return handleOptions()
+export async function OPTIONS(request: NextRequest) {
+  return handleOptions(request)
 }
 
 /**
@@ -24,12 +24,12 @@ export async function POST(
     const { user } = await payload.auth({ headers: request.headers })
     
     if (!user) {
-      return createCorsResponse({ error: 'Unauthorized' }, 401)
+      return createCorsResponse({ error: 'Unauthorized' }, 401, request.headers)
     }
 
     // Only admin and trainer can lock events
     if (!['admin', 'trainer'].includes(user.role)) {
-      return createCorsResponse({ error: 'Insufficient permissions' }, 403)
+      return createCorsResponse({ error: 'Insufficient permissions' }, 403, request.headers)
     }
 
     // Update the event to set locked = true
@@ -46,15 +46,15 @@ export async function POST(
       success: true,
       message: 'Event locked successfully',
       event: updatedEvent,
-    })
+    }, 200, request.headers)
   } catch (error) {
     console.error('Error locking event:', error)
     
     if (error instanceof Error) {
-      return createCorsResponse({ error: error.message }, 400)
+      return createCorsResponse({ error: error.message }, 400, request.headers)
     }
     
-    return createCorsResponse({ error: 'Internal server error' }, 500)
+    return createCorsResponse({ error: 'Internal server error' }, 500, request.headers)
   }
 }
 
@@ -74,12 +74,12 @@ export async function DELETE(
     const { user } = await payload.auth({ headers: request.headers })
     
     if (!user) {
-      return createCorsResponse({ error: 'Unauthorized' }, 401)
+      return createCorsResponse({ error: 'Unauthorized' }, 401, request.headers)
     }
 
     // Only admin and trainer can unlock events
     if (!['admin', 'trainer'].includes(user.role)) {
-      return createCorsResponse({ error: 'Insufficient permissions' }, 403)
+      return createCorsResponse({ error: 'Insufficient permissions' }, 403, request.headers)
     }
 
     // Update the event to set locked = false
@@ -96,14 +96,14 @@ export async function DELETE(
       success: true,
       message: 'Event unlocked successfully',
       event: updatedEvent,
-    })
+    }, 200, request.headers)
   } catch (error) {
     console.error('Error unlocking event:', error)
     
     if (error instanceof Error) {
-      return createCorsResponse({ error: error.message }, 400)
+      return createCorsResponse({ error: error.message }, 400, request.headers)
     }
     
-    return createCorsResponse({ error: 'Internal server error' }, 500)
+    return createCorsResponse({ error: 'Internal server error' }, 500, request.headers)
   }
 }

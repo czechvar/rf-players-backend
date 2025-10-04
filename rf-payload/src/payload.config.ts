@@ -34,12 +34,12 @@ export default buildConfig({
    * CORS / CSRF - Allow frontend access
    */
   cors: [
-    ...(isDevelopment ? ["http://localhost:3000"] : []),
-    ...(process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : [])
+    ...(isDevelopment ? ["http://localhost:3000", "http://localhost:4000"] : []),
+    ...(process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',').map(origin => origin.trim()) : [])
   ],
   csrf: [
-    ...(isDevelopment ? ["http://localhost:3000"] : []),
-    ...(process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : [])
+    ...(isDevelopment ? ["http://localhost:3000", "http://localhost:4000"] : []),
+    ...(process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',').map(origin => origin.trim()) : [])
   ],
   cookiePrefix: 'payload',
   typescript: {

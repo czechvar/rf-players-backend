@@ -4,8 +4,8 @@ import { getPayload } from 'payload'
 import configPromise from '@/payload.config'
 
 
-export async function OPTIONS() {
-  return handleOptions()
+export async function OPTIONS(request: NextRequest) {
+  return handleOptions(request)
 }
 
 /**
@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
     const { user } = await payload.auth({ headers: request.headers })
     
     if (!user) {
-      return createCorsResponse({ error: 'Unauthorized' }, 401)
+      return createCorsResponse({ error: 'Unauthorized' }, 401, request.headers)
     }
 
     // Get some basic counts
@@ -80,12 +80,12 @@ export async function GET(request: NextRequest) {
         players: allPlayers.docs,
         attendance: allAttendance.docs
       }
-    })
+    }, 200, request.headers)
   } catch (error) {
     console.error('Debug endpoint error:', error)
     return createCorsResponse({ 
       error: 'Internal server error',
       details: error instanceof Error ? error.message : 'Unknown error'
-    }, 500)
+    }, 500, request.headers)
   }
 }

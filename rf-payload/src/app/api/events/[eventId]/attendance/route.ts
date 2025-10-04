@@ -3,8 +3,8 @@ import { createCorsResponse, handleOptions } from '@/utils/cors'
 import { getPayload } from 'payload'
 import configPromise from '@/payload.config'
 
-export async function OPTIONS() {
-  return handleOptions()
+export async function OPTIONS(request: NextRequest) {
+  return handleOptions(request)
 }
 /**
  * GET /api/events/[eventId]/attendance
@@ -22,7 +22,7 @@ export async function GET(
     const { user } = await payload.auth({ headers: request.headers })
     
     if (!user) {
-      return createCorsResponse({ error: 'Unauthorized' }, 401)
+      return createCorsResponse({ error: 'Unauthorized' }, 401, request.headers)
     }
 
     // Get attendance records for the event
@@ -35,10 +35,10 @@ export async function GET(
       user,
     })
 
-    return createCorsResponse(attendance)
+    return createCorsResponse(attendance, 200, request.headers)
   } catch (error) {
     console.error('Error fetching attendance:', error)
-    return createCorsResponse({ error: 'Internal server error' }, 500)
+    return createCorsResponse({ error: 'Internal server error' }, 500, request.headers)
   }
 }
 
@@ -59,7 +59,7 @@ export async function PATCH(
     const { user } = await payload.auth({ headers: request.headers })
     
     if (!user) {
-      return createCorsResponse({ error: 'Unauthorized' }, 401)
+      return createCorsResponse({ error: 'Unauthorized' }, 401, request.headers)
     }
 
     // Find the attendance record
@@ -75,7 +75,7 @@ export async function PATCH(
     })
 
     if (attendanceRecords.docs.length === 0) {
-      return createCorsResponse({ error: 'Attendance record not found' }, 404)
+      return createCorsResponse({ error: 'Attendance record not found' }, 404, request.headers)
     }
 
     const attendanceId = attendanceRecords.docs[0].id
@@ -93,14 +93,14 @@ export async function PATCH(
       user,
     })
 
-    return createCorsResponse(updatedAttendance)
+    return createCorsResponse(updatedAttendance, 200, request.headers)
   } catch (error) {
     console.error('Error updating attendance:', error)
     
     if (error instanceof Error) {
-      return createCorsResponse({ error: error.message }, 400)
+      return createCorsResponse({ error: error.message }, 400, request.headers)
     }
     
-    return createCorsResponse({ error: 'Internal server error' }, 500)
+    return createCorsResponse({ error: 'Internal server error' }, 500, request.headers)
   }
 }
