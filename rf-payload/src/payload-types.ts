@@ -129,6 +129,11 @@ export interface User {
   dateOfBirth?: string | null;
   isApproved?: boolean | null;
   /**
+   * Whether the user has verified their email address.
+   */
+  emailVerified?: boolean | null;
+  verificationToken?: string | null;
+  /**
    * Uncheck to deactivate user without deleting.
    */
   active?: boolean | null;
@@ -301,6 +306,8 @@ export interface UsersSelect<T extends boolean = true> {
   lastName?: T;
   dateOfBirth?: T;
   isApproved?: T;
+  emailVerified?: T;
+  verificationToken?: T;
   active?: T;
   photo?: T;
   phoneNumber?: T;

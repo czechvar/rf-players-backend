@@ -102,9 +102,30 @@ export const Users: CollectionConfig = {
     {
       name: 'isApproved',
       type: 'checkbox',
-      defaultValue: true, // Phase 1 simplify; later require approval flow
+      defaultValue: false, // Phase 2: new registrations require trainer/admin approval
       admin: { position: 'sidebar' },
       access: { update: isAdminOrTrainer },
+    },
+    {
+      name: 'emailVerified',
+      type: 'checkbox',
+      defaultValue: false,
+      admin: {
+        position: 'sidebar',
+        description: 'Whether the user has verified their email address.',
+      },
+      access: { update: isAdminOrTrainer },
+    },
+    {
+      name: 'verificationToken',
+      type: 'text',
+      admin: {
+        hidden: true, // Never show in admin UI
+      },
+      access: {
+        read: isAdmin,
+        update: () => false, // Only set programmatically
+      },
     },
     {
       name: 'active',
